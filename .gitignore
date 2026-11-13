@@ -17,3 +17,5 @@ clean.py
 fixflag.py
 trace.py
 revert_apk.py
+apk/*.p12
+apk/*.pem
