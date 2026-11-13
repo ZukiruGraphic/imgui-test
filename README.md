@@ -17,10 +17,29 @@ Preview with Termux:X11, build native as APK.
 - Vulkan-capable devices also work, because they also support OpenGL ES 3.0. This app uses OpenGL ES 3.0, not Vulkan.
 
 ## X11 Preview
-Build with cmake, run with DISPLAY=:0, LIBGL_ALWAYS_SOFTWARE=1, MESA_LOADER_DRIVER_OVERRIDE=swrast, SDL_VIDEODRIVER=x11
+```bash
+cd ~/imgui-test
+cmake --build build -j$(nproc)
+export DISPLAY=:0
+export LIBGL_ALWAYS_SOFTWARE=1
+export MESA_LOADER_DRIVER_OVERRIDE=swrast
+export SDL_VIDEODRIVER=x11
+./build/app &
+```
 
 ## Build APK
-Build libimguitest.so, patchelf libEGL.so.1 to libEGL.so, package with aapt, sign with apksigner, copy to Download
+```bash
+cd ~/imgui-test/apk/app/src/main/cpp
+cmake --build build -j$(nproc)
+patchelf --replace-needed libEGL.so.1 libEGL.so build/libimguitest.so
+cd ~/imgui-test/apk
+cp app/src/main/cpp/build/libimguitest.so lib/arm64-v8a/libimguitest.so
+aapt package -f -M app/src/main/AndroidManifest.xml -I sdk/android.jar -F out/base.apk --min-sdk-version 24 --target-sdk-version 34 --version-code 1 --version-name 1.0
+cp out/base.apk out/unsigned.apk
+zip -r -0 out/unsigned.apk lib/
+apksigner sign --ks debug.p12 --ks-type PKCS12 --ks-pass pass:android --key-pass pass:android --ks-key-alias debug --out out/imguitest.apk out/unsigned.apk
+cp out/imguitest.apk ~/storage/downloads/imguitest.apk
+```
 
 ## Release
 v1.0.0 - imguitest-base.apk - base build with touch + default theme.
